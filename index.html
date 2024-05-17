@@ -6,21 +6,81 @@
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
         <script>
-            AFRAME.registerComponent('videohandler', {
-                init: function () {
-                    var marker = this.el;
-                    this.vid = document.querySelector("#vid");
+            // Function to fetch JSON and create markers dynamically
+            async function fetchAssets() {
+                const response = await fetch('assets.json');
+                const data = await response.json();
+                const assets = data.assets;
 
-                    marker.addEventListener('markerFound', function () {
-                        this.toggle = true;
-                        this.vid.play();
-                    }.bind(this));
+                const scene = document.querySelector('a-scene');
+                const assetsContainer = document.querySelector('a-assets');
 
-                    marker.addEventListener('markerLost', function () {
-                        this.toggle = false;
-                        this.vid.pause();
-                    }.bind(this));
-                },
+                assets.forEach((asset, index) => {
+                    // Create and add video element
+                    const video = document.createElement('video');
+                    video.setAttribute('id', `vid${index}`);
+                    video.setAttribute('src', asset.video);
+                    video.setAttribute('preload', 'auto');
+                    video.setAttribute('response-type', 'arraybuffer');
+                    video.setAttribute('loop', '');
+                    video.setAttribute('crossorigin', '');
+                    video.setAttribute('webkit-playsinline', '');
+                    video.setAttribute('playsinline', '');
+                    video.setAttribute('muted', '');
+                    assetsContainer.appendChild(video);
+
+                    // Create and add marker element
+                    const marker = document.createElement('a-marker');
+                    marker.setAttribute('type', 'pattern');
+                    marker.setAttribute('preset', 'custom');
+                    marker.setAttribute('url', asset.marker);
+                    marker.setAttribute('videohandler', '');
+                    marker.setAttribute('smooth', 'true');
+                    marker.setAttribute('smoothCount', '10');
+                    marker.setAttribute('smoothTolerance', '0.01');
+                    marker.setAttribute('smoothThreshold', '5');
+                    marker.setAttribute('raycaster', 'objects: .clickable');
+                    marker.setAttribute('emitevents', 'true');
+                    marker.setAttribute('cursor', 'fuse: false; rayOrigin: mouse;');
+                    marker.setAttribute('id', `marker${index}`);
+
+                    // Create and add video entity inside marker
+                    const videoEntity = document.createElement('a-video');
+                    videoEntity.setAttribute('src', `#vid${index}`);
+                    videoEntity.setAttribute('scale', '1 2 1');
+                    videoEntity.setAttribute('position', '0 0.1 0');
+                    videoEntity.setAttribute('rotation', '-90 0 0');
+                    videoEntity.setAttribute('class', 'clickable');
+                    videoEntity.setAttribute('gesture-handler', '');
+                    marker.appendChild(videoEntity);
+
+                    scene.appendChild(marker);
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                fetchAssets();
+
+                AFRAME.registerComponent('videohandler', {
+                    init: function () {
+                        var marker = this.el;
+                        this.vid = marker.querySelector('a-video').getAttribute('src');
+
+                        marker.addEventListener('markerFound', function () {
+                            const videoEl = document.querySelector(this.vid);
+                            if (videoEl) {
+                                videoEl.play();
+                            }
+                        }.bind(this));
+
+                        marker.addEventListener('markerLost', function () {
+                            const videoEl = document.querySelector(this.vid);
+                            if (videoEl) {
+                                videoEl.pause();
+                            }
+                        }.bind(this));
+                    },
+                });
             });
         </script>
     </head>
@@ -34,44 +94,7 @@
             embedded
             gesture-detector
         >
-            <a-assets>
-                <video
-                    id="vid"
-                    src="assets/asset.mp4"
-                    preload="auto"
-                    response-type="arraybuffer"
-                    loop
-                    crossorigin
-                    webkit-playsinline
-                    autoplay
-                    playsinline
-                ></video>
-            </a-assets>
-
-            <a-marker
-                type="pattern"
-                preset="custom"
-                url="assets/marker.patt"
-                videohandler
-                smooth="true"
-                smoothCount="10"
-                smoothTolerance="0.01"
-                smoothThreshold="5"
-                raycaster="objects: .clickable"
-                emitevents="true"
-                cursor="fuse: false; rayOrigin: mouse;"
-                id="markerA"
-            >
-                <a-video
-                    src="#vid"
-                    scale="1 1 1"
-                    position="0 0.1 0"
-                    rotation="-90 0 0"
-                    class="clickable"
-                    gesture-handler
-                ></a-video>
-            </a-marker>
-
+            <a-assets></a-assets>
             <a-entity camera></a-entity>
         </a-scene>
     </body>
