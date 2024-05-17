@@ -1,0 +1,16 @@
+{
+    "assets": [
+        {
+            "video": "assets/asset.mp4",
+            "marker": "assets/marker.patt"
+        },
+        {
+            "video": "assets/asset1.mp4",
+            "marker": "assets/marker1.patt"
+        },
+        {
+            "video": "assets/asset3.mp4",
+            "marker": "assets/marker3.patt"
+        }
+    ]
+}
